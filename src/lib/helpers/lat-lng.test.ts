@@ -15,6 +15,14 @@ const validTestCases = [
 		url: 'https://www.google.com/maps/@41.7257,13.1099251,17z',
 		expected: { latitude: 41.7257, longitude: 13.1099251 },
 	},
+	{
+		url: 'https://maps.google.com/?q=42.2299,%2012.2569',
+		expected: { latitude: 42.2299, longitude: 12.2569 },
+	},
+	{
+		url: 'https://www.google.com/maps?q=42.3507,+12.0829',
+		expected: { latitude: 42.3507, longitude: 12.0829 },
+	},
 ];
 
 describe('parseLatLng', () => {

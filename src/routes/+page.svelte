@@ -3,7 +3,7 @@
 	import Map from '$lib/components/Map.svelte';
 	import type { PageData } from './$types';
 
-	export let data: PageData;
+	let { data }: { data: PageData } = $props();
 </script>
 
 <div class="grid grid-cols-6 gap-3">
