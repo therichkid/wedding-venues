@@ -1,10 +1,25 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
+	import { parseLatLng } from '$lib/helpers/lat-lng';
+	import type { InsertVenue } from '$lib/types/db';
 	import mql, { type MqlResponseData } from '@microlink/mql';
 
 	let url = $state('');
+	let mapsUrl = $state('');
 	let preview = $state<MqlResponseData | null>(null);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
+
+	let formData = $state<InsertVenue>({
+		url: '',
+		name: '',
+		description: null,
+		imageUrl: null,
+		lat: null,
+		lng: null,
+	});
+
+	let isFormValid = $derived(Boolean(preview?.url && preview?.title && formData.lat && formData.lng && !error));
 
 	async function fetchPreview() {
 		if (!url) {
@@ -23,28 +38,42 @@
 			}
 
 			preview = data;
+			error = null;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'An error occurred';
 			preview = null;
+			error = err instanceof Error ? err.message : 'An error occurred';
 		} finally {
 			loading = false;
 		}
 	}
+
+	$effect(() => {
+		if (mapsUrl) {
+			try {
+				const { latitude, longitude } = parseLatLng(mapsUrl);
+
+				formData.lat = latitude.toString();
+				formData.lng = longitude.toString();
+				error = null;
+			} catch (err) {
+				formData.lat = null;
+				formData.lng = null;
+				error = err instanceof Error ? err.message : 'Invalid maps URL';
+			}
+		}
+	});
 </script>
 
 <div class="m-3 flex flex-col gap-3">
 	<div class="flex flex-col gap-2">
 		<label class="label">
-			<span class="label-text">URL</span>
-			<input type="url" bind:value={url} placeholder="Enter URL to preview" class="input" />
+			<span class="label-text">Add Venue</span>
+			<input type="url" bind:value={url} placeholder="Enter Matrimonio URL" class="input" />
 		</label>
 
-		<button
-			type="button"
-			onclick={fetchPreview}
-			disabled={loading}
-			class="btn preset-filled-primary-500">{loading ? 'Loading...' : 'Get Preview'}</button
-		>
+		<button type="button" onclick={fetchPreview} disabled={loading} class="btn preset-filled-primary-500">
+			{loading ? 'Loading...' : 'Preview'}
+		</button>
 	</div>
 
 	{#if error}
@@ -54,9 +83,20 @@
 	{/if}
 
 	{#if preview}
-		<div
+		<form
+			method="post"
+			action="?/addVenue"
+			use:enhance
 			class="card block divide-y overflow-hidden border-[1px] border-surface-200-800 divide-surface-200-800 preset-filled-surface-100-900"
 		>
+			<!-- Hidden inputs for form submission -->
+			<input type="hidden" name="url" value={preview.url} />
+			<input type="hidden" name="name" value={preview.title ?? ''} />
+			<input type="hidden" name="description" value={preview.description ?? ''} />
+			<input type="hidden" name="imageUrl" value={preview.image?.url ?? ''} />
+			<input type="hidden" name="lat" value={formData.lat ?? ''} />
+			<input type="hidden" name="lng" value={formData.lng ?? ''} />
+
 			{#if preview.image}
 				<header>
 					<img src={preview.image.url} alt={preview.title} class="aspect-[21/9] w-full" />
@@ -69,13 +109,16 @@
 				{#if preview.description}
 					<p class="opacity-60">{preview.description}</p>
 				{/if}
+
+				<label class="label">
+					<span class="label-text">Add Location</span>
+					<input type="url" bind:value={mapsUrl} placeholder="Enter Google Maps Location" class="input" />
+				</label>
 			</article>
 			<footer class="flex items-center justify-between gap-3 p-3">
-				<small class="opacity-60">{preview.publisher ?? ''}</small>
-				<small class="opacity-60">
-					<a href={preview.url} target="_blank" rel="noopener noreferrer">Visit Site</a>
-				</small>
+				<button type="reset" class="btn preset-outlined-primary-500">Cancel</button>
+				<button type="submit" disabled={!isFormValid} class="btn preset-filled-primary-500">Add Venue</button>
 			</footer>
-		</div>
+		</form>
 	{/if}
 </div>

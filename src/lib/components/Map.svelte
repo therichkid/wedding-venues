@@ -1,8 +1,12 @@
-<script>
+<script lang="ts">
 	import { browser } from '$app/environment';
+	import type { Venue } from '$lib/types/db';
+	import type { Map } from 'leaflet';
 	import { onMount } from 'svelte';
 
-	let map;
+	export let venues: Venue[] = [];
+
+	let map: Map | null = null;
 
 	onMount(async () => {
 		if (browser) {
@@ -11,11 +15,18 @@
 			map = L.map('map').setView([42.0, 13.2], 8);
 
 			L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				attribution:
-					'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 			}).addTo(map);
 
-			L.marker([42.2, 13.2]).addTo(map).bindPopup('A pretty CSS popup.<br> Easily customizable.');
+			venues.forEach((venue) => {
+				if (venue.lat && venue.lng) {
+					L.marker([Number(venue.lat), Number(venue.lng)]).addTo(map!).bindPopup(`
+										<strong>${venue.name}</strong><br>
+										${venue.description || ''}<br>
+										${venue.url ? `<a href="${venue.url}" target="_blank">Visit Website</a>` : ''}
+									`);
+				}
+			});
 		}
 	});
 </script>
