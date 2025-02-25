@@ -4,6 +4,7 @@
 	import { parseLatLng } from '$lib/helpers/lat-lng';
 	import mql, { type MqlResponseData } from '@microlink/mql';
 	import type { SubmitFunction } from '@sveltejs/kit';
+	import { onMount } from 'svelte';
 
 	let url = $state('');
 	let mapsUrl = $state('');
@@ -27,10 +28,12 @@
 				latLng = null;
 				error = err instanceof Error ? err.message : 'Invalid maps URL';
 			}
+		} else {
+			latLng = null;
 		}
 	});
 
-	async function fetchPreview() {
+	const fetchPreview = async () => {
 		if (!url) {
 			error = 'Please enter a URL';
 			return;
@@ -46,6 +49,7 @@
 				throw new Error('Failed to fetch preview');
 			}
 
+			console.log('Fetched preview:', data);
 			preview = data;
 			error = null;
 		} catch (err) {
@@ -54,7 +58,7 @@
 		} finally {
 			loading = false;
 		}
-	}
+	};
 
 	const handleSubmit: SubmitFunction = () => {
 		return async ({ result }) => {
@@ -64,69 +68,90 @@
 				preview = null;
 				latLng = null;
 
+				closeModal();
 				await invalidateAll();
 			} else if (result.type === 'failure') {
 				error = result.data?.error || 'Failed to add venue';
 			}
 		};
 	};
+
+	const openModal = () => {
+		getModalElement()?.showModal();
+	};
+
+	const closeModal = () => {
+		getModalElement()?.close();
+	};
+
+	const getModalElement = () => {
+		const elemModal: HTMLDialogElement | null = document.querySelector('[data-dialog]');
+		return elemModal;
+	};
+
+	onMount(() => openModal());
 </script>
 
-<div class="m-3 flex flex-col gap-3">
-	<div class="flex flex-col gap-2">
-		<label class="label">
-			<span class="label-text">Add Venue</span>
-			<input type="url" bind:value={url} placeholder="Enter Matrimonio URL" class="input" />
-		</label>
+<button data-dialog-show onclick={openModal} class="btn preset-filled-primary-500 w-full">Add Venue</button>
 
-		<button type="button" onclick={fetchPreview} disabled={loading} class="btn preset-filled-primary-500">
-			{loading ? 'Loading...' : 'Preview'}
-		</button>
-	</div>
+<dialog
+	data-dialog
+	class="card bg-surface-100-900 backdrop:bg-surface-50/75 dark:backdrop:bg-surface-950/75 fixed top-1/2 left-1/2 z-10 h-full max-h-3/4 w-full max-w-screen-md -translate-x-1/2 -translate-y-1/2 space-y-4 p-4 shadow-xl"
+>
+	<form method="post" action="?/addVenue" use:enhance={handleSubmit} class="flex h-full flex-col">
+		<header>
+			<h2 class="h2 mb-4">Add Venue</h2>
+		</header>
 
-	{#if error}
-		<div class="rounded-md border-[1px] border-error-500 p-2 text-error-500">
-			{error}
-		</div>
-	{/if}
+		<article class="flex grow flex-col gap-4">
+			<div class="input-group grid-cols-[auto_1fr_auto]">
+				<div class="ig-cell preset-tonal">https://</div>
+				<input type="url" bind:value={url} class="ig-input" placeholder="www.matrimonio.com" />
+				<button type="button" onclick={fetchPreview} disabled={loading} class="ig-btn preset-filled">
+					{loading ? 'Loading...' : 'Load'}
+				</button>
+			</div>
 
-	{#if preview}
-		<form
-			method="post"
-			action="?/addVenue"
-			use:enhance={handleSubmit}
-			class="card block divide-y overflow-hidden border-[1px] border-surface-200-800 divide-surface-200-800 preset-filled-surface-100-900"
-		>
-			<!-- Hidden inputs for form submission -->
-			<input type="hidden" name="url" value={preview.url} />
-			<input type="hidden" name="name" value={preview.title ?? ''} />
-			<input type="hidden" name="description" value={preview.description} />
-			<input type="hidden" name="imageUrl" value={preview.image?.url} />
-			<input type="hidden" name="lat" value={latLng?.lat} />
-			<input type="hidden" name="lng" value={latLng?.lng} />
-
-			{#if preview.image}
-				<header>
-					<img src={preview.image.url} alt={preview.title} class="aspect-[21/9] w-full" />
-				</header>
+			{#if error}
+				<div class="border-error-500 rounded-lg border-[1px] p-4">
+					{error}
+				</div>
 			{/if}
 
-			<article class="space-y-3 p-3">
-				<h2 class="h6">{preview.title}</h2>
-
-				{#if preview.description}
-					<p class="opacity-60">{preview.description}</p>
-				{/if}
+			{#if preview}
+				<div class="border-surface-200-800 flex flex-col rounded-lg border-[1px]">
+					{#if preview.image}
+						<img src={preview.image.url} alt={preview.title} class="aspect-[21/9] w-full rounded-t-lg object-cover" />
+					{/if}
+					<div class="p-3">
+						<h3 class="h3">{preview.title}</h3>
+						{#if preview.description}
+							<p class="mt-1 opacity-60">{preview.description}</p>
+						{/if}
+					</div>
+				</div>
 
 				<label class="label">
-					<span class="label-text">Add Location</span>
-					<input type="url" bind:value={mapsUrl} placeholder="Enter Google Maps Location" class="input" />
+					<span class="label-text">Google Maps</span>
+					<div class="input-group grid-cols-[auto_1fr]">
+						<div class="ig-cell preset-tonal">https://</div>
+						<input type="url" bind:value={mapsUrl} class="ig-input" placeholder="maps.google.com" />
+					</div>
 				</label>
-			</article>
-			<footer class="flex items-center justify-between gap-3 p-3">
-				<button type="reset" class="btn preset-outlined-primary-500">Cancel</button>
-				<button type="submit" disabled={!isFormValid} class="btn preset-filled-primary-500">Add Venue</button>
-			</footer>
-		</form>
-	{/if}
-</div>
+			{/if}
+		</article>
+
+		<!-- Hidden inputs for form submission -->
+		<input type="hidden" name="url" value={preview?.url} />
+		<input type="hidden" name="name" value={preview?.title} />
+		<input type="hidden" name="description" value={preview?.description} />
+		<input type="hidden" name="imageUrl" value={preview?.image?.url} />
+		<input type="hidden" name="lat" value={latLng?.lat} />
+		<input type="hidden" name="lng" value={latLng?.lng} />
+
+		<footer class="flex justify-end gap-4">
+			<button type="reset" data-dialog-close onclick={closeModal} class="btn preset-tonal">Cancel</button>
+			<button type="submit" disabled={!isFormValid} class="btn preset-filled-primary-500">Add Venue</button>
+		</footer>
+	</form>
+</dialog>

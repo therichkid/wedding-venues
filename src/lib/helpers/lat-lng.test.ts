@@ -16,6 +16,14 @@ const validTestCases = [
 		expected: { latitude: 41.7257, longitude: 13.1099251 },
 	},
 	{
+		url: 'https://maps.google.com/?q=41.7257,13.1125&other=params',
+		expected: { latitude: 41.7257, longitude: 13.1125 },
+	},
+	{
+		url: 'https://maps.google.com/?q=41.7257 , 13.1125',
+		expected: { latitude: 41.7257, longitude: 13.1125 },
+	},
+	{
 		url: 'https://maps.google.com/?q=42.2299,%2012.2569',
 		expected: { latitude: 42.2299, longitude: 12.2569 },
 	},
@@ -48,22 +56,5 @@ describe('parseLatLng', () => {
 
 	it('should throw error for invalid coordinate format', () => {
 		expect(() => parseLatLng('https://maps.google.com/?q=invalid,coordinates')).toThrowError('Invalid coordinate format');
-	});
-
-	// Edge cases
-	it('should handle URLs with extra parameters', () => {
-		const url = 'https://maps.google.com/?q=41.7257,13.1125&other=params';
-		expect(parseLatLng(url)).toEqual({
-			latitude: 41.7257,
-			longitude: 13.1125,
-		});
-	});
-
-	it('should handle whitespace in coordinates', () => {
-		const url = 'https://maps.google.com/?q=41.7257 , 13.1125';
-		expect(parseLatLng(url)).toEqual({
-			latitude: 41.7257,
-			longitude: 13.1125,
-		});
 	});
 });
