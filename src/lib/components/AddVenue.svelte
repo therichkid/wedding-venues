@@ -4,7 +4,6 @@
 	import { parseLatLng } from '$lib/helpers/lat-lng';
 	import mql, { type MqlResponseData } from '@microlink/mql';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { onMount } from 'svelte';
 
 	let url = $state('');
 	let mapsUrl = $state('');
@@ -76,20 +75,46 @@
 		};
 	};
 
-	const openModal = () => {
-		getModalElement()?.showModal();
+	const openModal = (event: MouseEvent) => {
+		event.stopPropagation();
+
+		const modal = getModalElement();
+		if (!modal) return;
+
+		modal.showModal();
+		modal.addEventListener('click', closeOnBackdropClick);
 	};
 
-	const closeModal = () => {
-		getModalElement()?.close();
+	const closeModal = (event?: MouseEvent) => {
+		event?.stopPropagation();
+
+		const modal = getModalElement();
+		if (!modal) return;
+
+		modal.close();
+		modal.removeEventListener('click', closeOnBackdropClick);
+	};
+
+	const closeOnBackdropClick = (event: MouseEvent) => {
+		const dialog = getModalElement();
+
+		if (!dialog) return;
+
+		const rect = dialog.getBoundingClientRect();
+		const isInDialog =
+			rect.top <= event.clientY &&
+			event.clientY <= rect.top + rect.height &&
+			rect.left <= event.clientX &&
+			event.clientX <= rect.left + rect.width;
+		if (!isInDialog) {
+			closeModal();
+		}
 	};
 
 	const getModalElement = () => {
 		const elemModal: HTMLDialogElement | null = document.querySelector('[data-dialog]');
 		return elemModal;
 	};
-
-	onMount(() => openModal());
 </script>
 
 <button data-dialog-show onclick={openModal} class="btn preset-filled-primary-500 w-full">Add Venue</button>
