@@ -1,11 +1,33 @@
 <script lang="ts">
 	import type { Venue } from '$lib/types/db';
+	import type { Map } from 'maplibre-gl';
 	import { MapLibre, Marker, NavigationControl, Popup, ScaleControl } from 'svelte-maplibre-gl';
 
 	let { venues = [], activeVenueId = $bindable() }: { venues: Venue[]; activeVenueId?: number } = $props();
+
+	let map = $state<Map | undefined>(undefined);
+
+	$effect(() => {
+		const activeVenue = venues.find((venue) => venue.id === activeVenueId);
+
+		if (!activeVenue || !map) {
+			return;
+		}
+
+		map.flyTo({
+			center: { lat: Number(activeVenue.lat), lng: Number(activeVenue.lng) },
+			duration: 1000,
+		});
+	});
 </script>
 
-<MapLibre class="h-full" style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json" zoom={8.0} center={{ lat: 42.0, lng: 13.2 }}>
+<MapLibre
+	class="h-full"
+	style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+	zoom={8.0}
+	center={{ lat: 42.0, lng: 13.2 }}
+	bind:map
+>
 	<NavigationControl />
 	<ScaleControl />
 
