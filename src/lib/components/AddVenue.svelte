@@ -117,7 +117,7 @@
 	};
 </script>
 
-<button data-dialog-show onclick={openModal} class="btn preset-filled-primary-500 w-full">Add Venue</button>
+<button data-dialog-show onclick={openModal} class="btn preset-filled-primary-500 w-full">Add New Venue</button>
 
 <dialog
 	data-dialog
@@ -151,7 +151,7 @@
 					<div class="p-3">
 						<h3 class="h3">{preview.title}</h3>
 						{#if preview.description}
-							<p class="mt-1 opacity-60">{preview.description}</p>
+							<p class="mt-1 opacity-60">{preview.description}...</p>
 						{/if}
 					</div>
 				</div>

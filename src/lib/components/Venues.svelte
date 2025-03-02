@@ -23,13 +23,19 @@
 		<Accordion.Item value={venue.id.toString()}>
 			{#snippet control()}<h2>{venue.name}</h2>{/snippet}
 			{#snippet panel()}
-				<img src={venue.imageUrl} alt={venue.name} />
-				<p>{venue.description}...</p>
-				<p>
-					{#if venue.url}
-						<a href={venue.url} target="_blank" class="text-primary-500 font-medium hover:underline">Visit Website.</a>
+				<div class="flex flex-col gap-3">
+					{#if venue.imageUrl}
+						<img src={venue.imageUrl} alt={venue.name} class="aspect-[21/9] w-full rounded-t-lg object-cover" />
 					{/if}
-				</p>
+
+					{#if venue.description}
+						<p>{venue.description}...</p>
+					{/if}
+
+					{#if venue.url}
+						<a href={venue.url} target="_blank" class="text-primary-500 font-medium hover:underline">Visit Website</a>
+					{/if}
+				</div>
 			{/snippet}
 		</Accordion.Item>
 	{/each}
