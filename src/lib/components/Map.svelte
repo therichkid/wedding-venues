@@ -1,67 +1,32 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
 	import type { Venue } from '$lib/types/db';
-	import type { Map, Marker } from 'leaflet';
-	import { onMount } from 'svelte';
+	import { MapLibre, Marker, NavigationControl, Popup, ScaleControl } from 'svelte-maplibre-gl';
 
 	let { venues = [], activeVenueId = $bindable() }: { venues: Venue[]; activeVenueId?: number } = $props();
-
-	let L: typeof import('leaflet') | null = null;
-	let map: Map | null = null;
-	let markers: Record<number, Marker> = {};
-
-	let mapInitialized = $state(false);
-
-	onMount(async () => {
-		if (browser) {
-			L = await import('leaflet');
-
-			map = L.map('map').setView([42.0, 13.2], 8);
-			L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-			}).addTo(map);
-
-			mapInitialized = true;
-		}
-	});
-
-	$effect(() => {
-		if (mapInitialized) {
-			Object.values(markers).forEach((marker) => marker.remove());
-			markers = {};
-
-			venues.forEach((venue) => {
-				if (venue.lat && venue.lng) {
-					const marker = L!.marker([Number(venue.lat), Number(venue.lng)]).addTo(map!).bindPopup(`
-								<strong>${venue.name}</strong><br>
-								${venue.url ? `<a href="${venue.url}" target="_blank">Visit Website</a>` : ''}
-							`);
-
-					markers[venue.id] = marker;
-					marker.on('click', () => {
-						activeVenueId = venue.id;
-					});
-				}
-			});
-		}
-	});
-
-	$effect(() => {
-		if (!mapInitialized || !activeVenueId || !markers[activeVenueId]) {
-			return;
-		}
-
-		const activeMarker = markers[activeVenueId];
-		activeMarker.openPopup();
-		map?.panTo(activeMarker.getLatLng());
-	});
 </script>
 
-<div id="map"></div>
+<MapLibre class="h-full" style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json" zoom={8.0} center={{ lat: 42.0, lng: 13.2 }}>
+	<NavigationControl />
+	<ScaleControl />
 
-<style>
-	#map {
-		height: 100vh;
-		width: 100%;
-	}
-</style>
+	{#each venues as venue}
+		{#if venue.lat && venue.lng}
+			<Marker lnglat={{ lat: Number(venue.lat), lng: Number(venue.lng) }}>
+				{#snippet content()}
+					<button type="button" class="text-center leading-none" onclick={() => (activeVenueId = venue.id)}>
+						<div class="text-4xl">&#128146;</div>
+						<div class="text-primary-900 font-bold drop-shadow-md">{venue.name}</div>
+					</button>
+				{/snippet}
+				<Popup open={activeVenueId === venue.id}>
+					<div>
+						<h4 class="h6">{venue.name}</h4>
+						{#if venue.url}
+							<a href={venue.url} target="_blank" class="font-medium hover:underline">Visit Website</a>
+						{/if}
+					</div>
+				</Popup>
+			</Marker>
+		{/if}
+	{/each}
+</MapLibre>

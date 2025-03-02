@@ -4,3 +4,11 @@
 @import '@skeletonlabs/skeleton/themes/catppuccin';
 @plugin '@tailwindcss/forms';
 @source '../node_modules/@skeletonlabs/skeleton-svelte/dist';
+
+.maplibregl-popup-content {
+	background: var(--color-surface-900) !important;
+}
+
+.maplibregl-popup-tip {
+	border-top-color: var(--color-surface-900) !important;
+}

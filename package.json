@@ -21,8 +21,9 @@
 	"dependencies": {
 		"@microlink/mql": "^0.13.14",
 		"drizzle-orm": "^0.39.3",
-		"leaflet": "^1.9.4",
-		"postgres": "^3.4.5"
+		"maplibre-gl": "^5.1.1",
+		"postgres": "^3.4.5",
+		"svelte-maplibre-gl": "^0.1.6"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.7",
@@ -34,7 +35,6 @@
 		"@sveltejs/vite-plugin-svelte": "^5.0.3",
 		"@tailwindcss/forms": "^0.5.10",
 		"@tailwindcss/vite": "^4.0.9",
-		"@types/leaflet": "^1.9.16",
 		"@types/node": "^22.13.8",
 		"drizzle-kit": "^0.30.5",
 		"eslint": "^9.21.0",
