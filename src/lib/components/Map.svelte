@@ -4,11 +4,11 @@
 	import type { Map, Marker } from 'leaflet';
 	import { onMount } from 'svelte';
 
-	let { venues = [] }: { venues: Venue[] } = $props();
+	let { venues = [], activeVenueId = $bindable() }: { venues: Venue[]; activeVenueId?: number } = $props();
 
 	let L: typeof import('leaflet') | null = null;
 	let map: Map | null = null;
-	let markers: Marker[] = [];
+	let markers: Record<number, Marker> = {};
 
 	let mapInitialized = $state(false);
 
@@ -27,20 +27,33 @@
 
 	$effect(() => {
 		if (mapInitialized) {
-			markers.forEach((marker) => marker.remove());
-			markers = [];
+			Object.values(markers).forEach((marker) => marker.remove());
+			markers = {};
 
 			venues.forEach((venue) => {
 				if (venue.lat && venue.lng) {
 					const marker = L!.marker([Number(venue.lat), Number(venue.lng)]).addTo(map!).bindPopup(`
 								<strong>${venue.name}</strong><br>
-								${venue.description || ''}<br>
 								${venue.url ? `<a href="${venue.url}" target="_blank">Visit Website</a>` : ''}
 							`);
-					markers.push(marker);
+
+					markers[venue.id] = marker;
+					marker.on('click', () => {
+						activeVenueId = venue.id;
+					});
 				}
 			});
 		}
+	});
+
+	$effect(() => {
+		if (!mapInitialized || !activeVenueId || !markers[activeVenueId]) {
+			return;
+		}
+
+		const activeMarker = markers[activeVenueId];
+		activeMarker.openPopup();
+		map?.panTo(activeMarker.getLatLng());
 	});
 </script>
 

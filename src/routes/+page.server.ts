@@ -6,7 +6,7 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
 	const venues = await db.select().from(venue);
-	return { venues };
+	return { venues: venues.sort((a, b) => a.name.localeCompare(b.name)) };
 };
 
 export const actions = {
