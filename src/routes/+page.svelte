@@ -9,6 +9,10 @@
 	let activeVenueId = $state<number | undefined>(undefined);
 </script>
 
+<svelte:head>
+	<title>Wedding Venues</title>
+</svelte:head>
+
 <div class="grid h-screen grid-cols-6">
 	<div class="col-span-4">
 		<Map venues={data.venues} bind:activeVenueId />
